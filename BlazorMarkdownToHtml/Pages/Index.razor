@@ -1,8 +1,4 @@
-﻿@using Markdig;
-@inject MarkdownPipeline pipeline;
-@using System.Text.RegularExpressions;
-
-@page "/"
+﻿@page "/"
 
 <div class="card vh-100">
     <div class="card-body d-flex flex-column flex-fill overflow-hidden">
@@ -11,31 +7,10 @@
             <button type="button" class="ml-auto btn btn-light btn-sm" @onclick="Format">Format</button>
         </h5>
         <div class="flex-fill d-flex align-items-stretch overflow-hidden">
-            <textarea class="form-control w-100 mr-1" @bind="input" @oninput="ToMarkup"></textarea>
+            <textarea class="form-control w-100 mr-1" @bind="input" @oninput="ProcessInput"></textarea>
             <div class="form-control h-auto w-100 ml-1 overflow-auto rounded">
                 @html
             </div>
         </div>
     </div>
 </div>
-
-@code {
-    private string input = string.Empty;
-    private MarkupString html;
-    private Regex normalizedExtraBits = new Regex(@"(\[\]\:)");
-
-    private void Format(MouseEventArgs args)
-    {
-        input = normalizedExtraBits.Replace(Markdown.Normalize(input), "");
-
-        StateHasChanged();
-    }
-
-    private void ToMarkup(ChangeEventArgs e)
-    {
-        input = (e.Value?.ToString() ?? string.Empty);
-        html = (MarkupString)Markdown.ToHtml(input, pipeline);
-
-        StateHasChanged();
-    }
-}
