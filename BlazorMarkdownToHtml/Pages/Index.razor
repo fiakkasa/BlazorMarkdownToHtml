@@ -7,7 +7,7 @@
             <button type="button" class="ml-auto btn btn-light btn-sm" @onclick="Format">Format</button>
         </h5>
         <div class="flex-fill d-flex align-items-stretch overflow-hidden">
-            <textarea class="form-control w-100 mr-1" @bind="input" @oninput="ProcessInput"></textarea>
+            <textarea class="form-control w-100 mr-1" @bind="markdown" @oninput="OnInput"></textarea>
             <div class="form-control h-auto w-100 ml-1 overflow-auto rounded">
                 @html
             </div>
