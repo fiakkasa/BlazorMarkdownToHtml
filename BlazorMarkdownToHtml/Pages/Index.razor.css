@@ -1,0 +1,19 @@
+﻿@media print {
+    .card {
+        height: auto !important;
+        border: none !important;
+    }
+
+    .card-body {
+        overflow: initial !important;
+    }
+
+    .card-title,
+    textarea {
+        display: none !important;
+    }
+
+    .form-control {
+        border: none !important;
+    }
+}
