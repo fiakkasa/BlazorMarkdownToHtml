@@ -8,38 +8,44 @@ using System.Text.RegularExpressions;
 
 namespace BlazorMarkdownToHtml.Pages
 {
-    internal record Input(string? markdown = default, bool format = false);
-
     public partial class Index : ComponentBase, IDisposable
     {
+        internal record Input(string? Markdown = default, bool Format = false);
+
         private string markdown = string.Empty;
         private MarkupString html;
         private bool disposedValue;
         private readonly Regex normalizedExtraBits = new(@"(\[\]\:)");
         private IDisposable? inputSubscription;
-        private BehaviorSubject<Input> inputSubject = new(new(string.Empty));
+        private readonly BehaviorSubject<Input> inputSubject = new(new(string.Empty));
+        private bool formatDisabled = true;
 
         [Inject] private MarkdownPipeline? Pipeline { get; set; }
 
 #pragma warning disable RCS1163 // Unused parameter.
-        private void Format(MouseEventArgs args) =>
-            inputSubject.OnNext(new(format: true));
+        private void Format(MouseEventArgs args) => inputSubject.OnNext(new(markdown, true));
 #pragma warning restore RCS1163 // Unused parameter.
 
-        private void OnInput(ChangeEventArgs e) =>
+        private void OnInput(ChangeEventArgs e)
+        {
+            ToggleFormatDisabled(e.Value?.ToString());
             inputSubject.OnNext(new(e.Value?.ToString()));
+        }
+
+        private void ToggleFormatDisabled(string? markdown)
+        {
+            formatDisabled = string.IsNullOrWhiteSpace(markdown);
+            StateHasChanged();
+        }
 
         private void ProcessInput(Input input)
         {
-            if (input.format)
-            {
-                markdown = normalizedExtraBits.Replace(Markdown.Normalize(markdown), "");
-            }
-            else
-            {
-                markdown = input.markdown ?? string.Empty;
-                html = (MarkupString)Markdown.ToHtml(markdown, Pipeline);
-            }
+            markdown =
+                input.Format
+                    ? normalizedExtraBits.Replace(Markdown.Normalize(input.Markdown ?? string.Empty), "")
+                    : input.Markdown ?? string.Empty;
+
+            html = (MarkupString)Markdown.ToHtml(markdown, Pipeline);
 
             InvokeAsync(() => StateHasChanged());
         }
@@ -49,6 +55,7 @@ namespace BlazorMarkdownToHtml.Pages
             inputSubscription =
                 inputSubject
                     .Throttle(TimeSpan.FromMilliseconds(600))
+                    .DistinctUntilChanged()
                     .Subscribe(ProcessInput);
         }
 
