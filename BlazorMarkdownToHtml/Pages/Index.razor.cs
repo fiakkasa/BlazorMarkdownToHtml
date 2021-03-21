@@ -23,13 +23,19 @@ namespace BlazorMarkdownToHtml.Pages
         [Inject] private MarkdownPipeline? Pipeline { get; set; }
 
 #pragma warning disable RCS1163 // Unused parameter.
-        private void Format(MouseEventArgs args) => inputSubject.OnNext(new(markdown, true));
+        private void OnFormat(MouseEventArgs args)
+        {
+            if (formatDisabled) return;
+
+            inputSubject.OnNext(new(markdown, true));
+        }
 #pragma warning restore RCS1163 // Unused parameter.
 
         private void OnInput(ChangeEventArgs e)
         {
-            ToggleFormatDisabled(e.Value?.ToString());
-            inputSubject.OnNext(new(e.Value?.ToString()));
+            var input = new Input(e.Value?.ToString());
+            ToggleFormatDisabled(input.Markdown);
+            inputSubject.OnNext(input);
         }
 
         private void ToggleFormatDisabled(string? markdown)
