@@ -25,7 +25,8 @@
     private void Format(MouseEventArgs args)
     {
         var normalized = Markdown.Normalize(input, pipeline: pipeline);
-        input = normalized.Substring(0, normalized.LastIndexOf("[]:"));
+        var lastIndex = normalized.LastIndexOf("[]:");
+        input = normalized.Substring(0, lastIndex > 0 ? lastIndex : normalized.Length);
 
         StateHasChanged();
     }
@@ -34,6 +35,7 @@
     {
         input = (e.Value?.ToString() ?? string.Empty);
         html = (MarkupString)Markdown.ToHtml(input, pipeline);
+
         StateHasChanged();
     }
 }
