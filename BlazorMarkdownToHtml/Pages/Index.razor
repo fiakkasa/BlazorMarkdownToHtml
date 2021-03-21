@@ -1,5 +1,6 @@
 ﻿@using Markdig;
 @inject MarkdownPipeline pipeline;
+@using System.Text.RegularExpressions;
 
 @page "/"
 
@@ -21,12 +22,11 @@
 @code {
     private string input = string.Empty;
     private MarkupString html;
+    private Regex normalizedExtraBits = new Regex(@"(\[\]\:)");
 
     private void Format(MouseEventArgs args)
     {
-        var normalized = Markdown.Normalize(input, pipeline: pipeline);
-        var lastIndex = normalized.LastIndexOf("[]:");
-        input = normalized.Substring(0, lastIndex > 0 ? lastIndex : normalized.Length);
+        input = normalizedExtraBits.Replace(Markdown.Normalize(input), "");
 
         StateHasChanged();
     }
