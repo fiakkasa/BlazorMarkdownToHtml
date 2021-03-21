@@ -10,14 +10,14 @@ namespace BlazorMarkdownToHtml.Pages
 {
     public partial class Index : ComponentBase, IDisposable
     {
-        internal record Input(string? Markdown = default, bool Format = false);
-
         private string markdown = string.Empty;
         private MarkupString html;
         private bool disposedValue;
         private readonly Regex normalizedExtraBits = new(@"(\[\]\:)");
-        private IDisposable? inputSubscription;
-        private readonly BehaviorSubject<Input> inputSubject = new(new(string.Empty));
+        private IDisposable? markdownToHtmlSubscription;
+        private readonly BehaviorSubject<string> markdownToHtmlSubject = new(string.Empty);
+        private IDisposable? formatMarkdownSubscription;
+        private readonly BehaviorSubject<string> formatMarkdownSubject = new(string.Empty);
         private bool formatDisabled = true;
 
         [Inject] private MarkdownPipeline? Pipeline { get; set; }
@@ -27,30 +27,32 @@ namespace BlazorMarkdownToHtml.Pages
         {
             if (formatDisabled) return;
 
-            inputSubject.OnNext(new(markdown, true));
+            formatDisabled = true;
+
+            formatMarkdownSubject.OnNext(markdown);
         }
 #pragma warning restore RCS1163 // Unused parameter.
 
+        private void FormatMarkdown(string unformattedMarkdown)
+        {
+            markdown = normalizedExtraBits.Replace(Markdown.Normalize(unformattedMarkdown), "");
+
+            formatDisabled = string.IsNullOrWhiteSpace(markdown);
+
+            InvokeAsync(() => StateHasChanged());
+        }
+
         private void OnInput(ChangeEventArgs e)
         {
-            var input = new Input(e.Value?.ToString());
-            ToggleFormatDisabled(input.Markdown);
-            inputSubject.OnNext(input);
-        }
+            markdown = e.Value?.ToString() ?? string.Empty;
 
-        private void ToggleFormatDisabled(string? markdown)
-        {
             formatDisabled = string.IsNullOrWhiteSpace(markdown);
-            StateHasChanged();
+
+            markdownToHtmlSubject.OnNext(markdown);
         }
 
-        private void ProcessInput(Input input)
+        private void ProcessInput(string markdown)
         {
-            markdown =
-                input.Format
-                    ? normalizedExtraBits.Replace(Markdown.Normalize(input.Markdown ?? string.Empty), "")
-                    : input.Markdown ?? string.Empty;
-
             html = (MarkupString)Markdown.ToHtml(markdown, Pipeline);
 
             InvokeAsync(() => StateHasChanged());
@@ -58,18 +60,25 @@ namespace BlazorMarkdownToHtml.Pages
 
         protected override void OnInitialized()
         {
-            inputSubscription =
-                inputSubject
+            markdownToHtmlSubscription =
+                markdownToHtmlSubject
                     .Throttle(TimeSpan.FromMilliseconds(600))
                     .DistinctUntilChanged()
                     .Subscribe(ProcessInput);
+
+            formatMarkdownSubscription =
+                formatMarkdownSubject
+                    .Throttle(TimeSpan.FromMilliseconds(250))
+                    .Subscribe(FormatMarkdown);
         }
 
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue) return;
 
-            inputSubscription?.Dispose();
+            markdownToHtmlSubscription?.Dispose();
+            formatMarkdownSubscription?.Dispose();
+
             disposedValue = true;
         }
 
