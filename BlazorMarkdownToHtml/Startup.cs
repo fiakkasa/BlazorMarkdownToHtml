@@ -1,3 +1,4 @@
+using Blazored.LocalStorage;
 using Markdig;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
@@ -22,6 +23,7 @@ namespace BlazorMarkdownToHtml
         {
             services.AddRazorPages();
             services.AddServerSideBlazor();
+            services.AddBlazoredLocalStorage();
             services.AddSingleton(
                 new MarkdownPipelineBuilder()
                     .UseAdvancedExtensions()

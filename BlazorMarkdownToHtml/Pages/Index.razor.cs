@@ -1,83 +1,118 @@
-﻿using Markdig;
+﻿using Blazored.LocalStorage;
+using Markdig;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using System;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
+using System.Threading.Tasks;
 
 namespace BlazorMarkdownToHtml.Pages
 {
     public partial class Index : ComponentBase, IDisposable
     {
-        private string markdown = string.Empty;
         private MarkupString html;
-        private bool disposedValue;
+        private string markdown = string.Empty;
         private readonly Regex normalizedExtraBits = new(@"(\[\]\:)");
-        private IDisposable? markdownToHtmlSubscription;
-        private readonly BehaviorSubject<string> markdownToHtmlSubject = new(string.Empty);
+        private bool actionsDisabled = true;
         private IDisposable? formatMarkdownSubscription;
-        private readonly BehaviorSubject<string> formatMarkdownSubject = new(string.Empty);
-        private bool formatDisabled = true;
+        private readonly BehaviorSubject<long> formatMarkdownSubject = new(0);
+        private IDisposable? inputMarkdownSubscription;
+        private readonly BehaviorSubject<string> inputMarkdownSubject = new(string.Empty);
+        private const string storageKey = "BlazorMarkdownToHtml";
+        private bool persist;
+        private bool disposedValue;
 
         [Inject] private MarkdownPipeline? Pipeline { get; set; }
+        [Inject] private ILocalStorageService? LocalStorage { get; set; }
 
 #pragma warning disable RCS1163 // Unused parameter.
         private void OnFormat(MouseEventArgs args)
         {
-            if (formatDisabled) return;
+            if (actionsDisabled) return;
 
-            formatDisabled = true;
+            actionsDisabled = true;
 
-            formatMarkdownSubject.OnNext(markdown);
+            formatMarkdownSubject.OnNext(DateTime.Now.Ticks);
         }
 #pragma warning restore RCS1163 // Unused parameter.
 
-        private void FormatMarkdown(string unformattedMarkdown)
+#pragma warning disable RCS1163 // Unused parameter.
+        private void OnClear(MouseEventArgs args)
         {
-            markdown = normalizedExtraBits.Replace(Markdown.Normalize(unformattedMarkdown), "");
+            if (actionsDisabled) return;
 
-            formatDisabled = string.IsNullOrWhiteSpace(markdown);
+            actionsDisabled = true;
 
-            InvokeAsync(() => StateHasChanged());
+            inputMarkdownSubject.OnNext(string.Empty);
         }
+#pragma warning restore RCS1163 // Unused parameter.
 
-        private void OnInput(ChangeEventArgs e)
+        private void OnInput(ChangeEventArgs e) =>
+            inputMarkdownSubject.OnNext(e.Value?.ToString() ?? string.Empty);
+
+        private void SetUIVariables(string? markdownValue)
         {
-            markdown = e.Value?.ToString() ?? string.Empty;
-
-            formatDisabled = string.IsNullOrWhiteSpace(markdown);
-
-            markdownToHtmlSubject.OnNext(markdown);
-        }
-
-        private void ProcessInput(string markdown)
-        {
-            html = (MarkupString)Markdown.ToHtml(markdown, Pipeline);
-
-            InvokeAsync(() => StateHasChanged());
+            markdown = string.IsNullOrWhiteSpace(markdownValue) ? string.Empty : markdownValue;
+            actionsDisabled = markdown.Length == 0;
         }
 
         protected override void OnInitialized()
         {
-            markdownToHtmlSubscription =
-                markdownToHtmlSubject
-                    .Throttle(TimeSpan.FromMilliseconds(600))
-                    .DistinctUntilChanged()
-                    .Subscribe(ProcessInput);
-
             formatMarkdownSubscription =
                 formatMarkdownSubject
+                    .Skip(1)
+                    .Select(_ => markdown)
                     .Throttle(TimeSpan.FromMilliseconds(250))
-                    .Subscribe(FormatMarkdown);
+                    .Select(markdownValue => normalizedExtraBits.Replace(Markdown.Normalize(markdownValue), ""))
+                    .Do(markdownValue =>
+                    {
+                        persist = markdown != markdownValue;
+                        SetUIVariables(markdownValue);
+                        InvokeAsync(() => StateHasChanged());
+                    })
+                    .Subscribe();
+
+            inputMarkdownSubscription =
+                inputMarkdownSubject
+                    .Skip(1)
+                    .Throttle(TimeSpan.FromMilliseconds(600))
+                    .Do(markdownValue =>
+                    {
+                        persist = markdown != markdownValue;
+                        SetUIVariables(markdownValue);
+                        html = (MarkupString)Markdown.ToHtml(markdown, Pipeline);
+                        InvokeAsync(() => StateHasChanged());
+                    })
+                    .Subscribe();
+        }
+
+        protected override async Task OnAfterRenderAsync(bool firstRender)
+        {
+            if (firstRender)
+            {
+                SetUIVariables(await LocalStorage!.GetItemAsync<string?>(storageKey).ConfigureAwait(true));
+
+                if (markdown.Length > 0)
+                {
+                    StateHasChanged();
+                    inputMarkdownSubject.OnNext(markdown);
+                }
+            }
+            else if (persist)
+            {
+                await LocalStorage!.SetItemAsync(storageKey, markdown).ConfigureAwait(true);
+                persist = false;
+            }
         }
 
         protected virtual void Dispose(bool disposing)
         {
             if (!disposedValue) return;
 
-            markdownToHtmlSubscription?.Dispose();
             formatMarkdownSubscription?.Dispose();
+            inputMarkdownSubscription?.Dispose();
 
             disposedValue = true;
         }
