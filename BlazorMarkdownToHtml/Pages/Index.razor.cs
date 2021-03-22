@@ -43,9 +43,9 @@ namespace BlazorMarkdownToHtml.Pages
         {
             if (actionsDisabled) return;
 
-            actionsDisabled = true;
-
-            inputMarkdownSubject.OnNext(string.Empty);
+            persist = true;
+            SetUIVariables(string.Empty);
+            html = (MarkupString)Markdown.ToHtml(markdown, Pipeline);
         }
 #pragma warning restore RCS1163 // Unused parameter.
 
