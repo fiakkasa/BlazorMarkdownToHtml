@@ -1,0 +1,8 @@
+﻿@inject NavigationManager navigationManager
+
+@code {
+    protected override bool ShouldRender() => false;
+
+    protected override void OnAfterRender(bool firstRender) =>
+        navigationManager.NavigateTo(navigationManager.BaseUri);
+}

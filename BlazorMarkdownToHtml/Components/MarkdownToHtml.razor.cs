@@ -8,9 +8,9 @@ using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
 using System.Threading.Tasks;
 
-namespace BlazorMarkdownToHtml.Pages
+namespace BlazorMarkdownToHtml.Components
 {
-    public partial class Index : ComponentBase, IDisposable
+    public partial class MarkdownToHtml : ComponentBase, IDisposable
     {
         private MarkupString html;
         private string markdown = string.Empty;
@@ -124,3 +124,4 @@ namespace BlazorMarkdownToHtml.Pages
         }
     }
 }
+

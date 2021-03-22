@@ -2,6 +2,8 @@
 
 This app was built as an experiment of running a Blazor Server app on heroku.
 
+Feel free to visit @ https://blazormarkdowntohtml.herokuapp.com/
+
 ## To get started you will need:
 
 - A heroku account
@@ -20,4 +22,3 @@ This app was built as an experiment of running a Blazor Server app on heroku.
 ## Resources
 
 - https://dev.to/alrobilliard/deploying-net-core-to-heroku-1lfe
-
