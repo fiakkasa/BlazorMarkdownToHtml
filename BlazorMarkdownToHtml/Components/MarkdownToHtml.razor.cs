@@ -3,6 +3,7 @@ using Markdig;
 using Microsoft.AspNetCore.Components;
 using Microsoft.AspNetCore.Components.Web;
 using System;
+using System.Diagnostics.CodeAnalysis;
 using System.Reactive.Linq;
 using System.Reactive.Subjects;
 using System.Text.RegularExpressions;
@@ -107,9 +108,10 @@ namespace BlazorMarkdownToHtml.Components
             }
         }
 
+        [ExcludeFromCodeCoverage(Justification = "Dispose")]
         protected virtual void Dispose(bool disposing)
         {
-            if (!disposedValue) return;
+            if (disposedValue) return;
 
             formatMarkdownSubscription?.Dispose();
             inputMarkdownSubscription?.Dispose();
