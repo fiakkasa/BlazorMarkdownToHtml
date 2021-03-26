@@ -20,8 +20,6 @@ namespace BlazorMarkdownToHtml.Components.Tests
 
             ctx.Services.AddSingleton(new MarkdownPipelineBuilder().Build());
             ctx.Services.AddSingleton(mockStorage.Object);
-
-
         }
 
         ~MarkdownToHtmlTests()
@@ -129,14 +127,14 @@ namespace BlazorMarkdownToHtml.Components.Tests
 
             var textarea = cut.Find("textarea.form-control");
             var formatButton = cut.Find("button.btn-primary");
-            var preFormatInput =
+            const string preFormatInput =
 @"# test
 
 
 
 - a
 - b";
-            var postFormatInput =
+            const string postFormatInput =
 @"# test
 
 - a
@@ -171,7 +169,7 @@ namespace BlazorMarkdownToHtml.Components.Tests
             var cut = ctx.RenderComponent<MarkdownToHtml>();
 
             var textarea = cut.Find("textarea.form-control");
-            var preClearInput =
+            const string preClearInput =
 @"# test
 
 
