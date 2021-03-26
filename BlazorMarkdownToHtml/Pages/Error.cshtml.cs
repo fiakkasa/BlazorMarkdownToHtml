@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.RazorPages;
-using System.Diagnostics;
 
 namespace BlazorMarkdownToHtml.Pages
 {
@@ -14,7 +13,7 @@ namespace BlazorMarkdownToHtml.Pages
 
         public void OnGet()
         {
-            RequestId = Activity.Current?.Id ?? HttpContext.TraceIdentifier;
+            RequestId = HttpContext.TraceIdentifier;
         }
     }
 }

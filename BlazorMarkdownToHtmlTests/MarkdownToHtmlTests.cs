@@ -15,8 +15,8 @@ namespace BlazorMarkdownToHtml.Components.Tests
 
         public MarkdownToHtmlTests()
         {
-            mockStorage = new Mock<ILocalStorageService>();
-            ctx = new TestContext();
+            mockStorage = new();
+            ctx = new();
 
             ctx.Services.AddSingleton(new MarkdownPipelineBuilder().Build());
             ctx.Services.AddSingleton(mockStorage.Object);
