@@ -46,7 +46,7 @@ namespace BlazorMarkdownToHtml.Components.Tests
         {
             var cut = ctx.RenderComponent<Redirect>();
 
-            cut.WaitForAssertion(() => Assert.Equal("http://test/", ctx.Services.GetService<NavigationManager>().Uri));
+            cut.WaitForAssertion(() => Assert.Equal("http://test/", ctx.Services.GetService<NavigationManager>()!.Uri));
         }
     }
 }
